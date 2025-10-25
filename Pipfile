@@ -10,6 +10,9 @@ langchain-community = "*"
 langgraph = "*"
 langchain = "*"
 langchain-tavily = "*"
+pydantic = "*"
+fastapi = "*"
+uvicorn = "*"
 
 [dev-packages]
 
