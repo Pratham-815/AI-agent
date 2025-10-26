@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
@@ -9,7 +11,8 @@ from langchain_openai import ChatOpenAI
 from langchain_tavily import TavilySearch 
 
 openai_llm=ChatOpenAI(model="gpt-4o-mini")
-groq_llm=ChatGroq(model="llama-3.3-70b-versatile")
+groq_llm_llama=ChatGroq(model="llama-3.3-70b-versatile")
+groq_llm_groq=ChatGroq(model="groq/compound-mini")
 
 
 from langchain.agents import create_agent

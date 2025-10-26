@@ -7,7 +7,7 @@ st.write("Create and Interact with the AI Agents!")
 
 system_prompt=st.text_area("Define your AI Agent: ", height=70, placeholder="Type your system prompt here...")
 
-MODEL_NAMES_GROQ = ["llama-3.3-70b-versatile", "mixtral-8x7b-32768"]
+MODEL_NAMES_GROQ = ["llama-3.3-70b-versatile", "groq/compound-mini"]
 MODEL_NAMES_OPENAI = ["gpt-4o-mini"]
 
 provider=st.radio("Select Provider:", ("Groq", "OpenAI"))
@@ -18,6 +18,10 @@ elif provider == "OpenAI":
     selected_model = st.selectbox("Select OpenAI Model:", MODEL_NAMES_OPENAI)
 
 allow_web_search=st.checkbox("Allow Web Search")
+
+if selected_model == "groq/compound-mini" and allow_web_search:
+    st.warning("⚠️ Web search is not supported with compound-mini model. It will be disabled.")
+    allow_web_search = False
 
 user_query=st.text_area("Enter your query: ", height=150, placeholder="Ask Anything!")
 
