@@ -13,7 +13,7 @@ class RequestModel(BaseModel):
 from fastapi import FastAPI
 from ai_agent import get_response_from_ai_agent
 
-ALLOWED_MODEL_NAMES=["llama3-70b-8192", "groq/compound-mini", "llama-3.3-70b-versatile", "gpt-4o-mini"]
+ALLOWED_MODEL_NAMES=["llama3-70b-8192", "groq/compound-mini", "llama-3.3-70b-versatile", "gpt-4o-mini", "gemini-1.5-flash", "gemini-2.5-pro"]
 
 app = FastAPI(title="AI Agent")
 

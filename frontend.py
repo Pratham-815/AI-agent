@@ -9,13 +9,16 @@ system_prompt=st.text_area("Define your AI Agent: ", height=70, placeholder="Typ
 
 MODEL_NAMES_GROQ = ["llama-3.3-70b-versatile", "groq/compound-mini"]
 MODEL_NAMES_OPENAI = ["gpt-4o-mini"]
+MODEL_NAMES_GEMINI = ["gemini-1.5-flash", "gemini-2.5-pro"]
 
-provider=st.radio("Select Provider:", ("Groq", "OpenAI"))
+provider=st.radio("Select Provider:", ("Groq", "OpenAI", "Gemini"))
 
 if provider == "Groq":
     selected_model = st.selectbox("Select Groq Model:", MODEL_NAMES_GROQ)
 elif provider == "OpenAI":
     selected_model = st.selectbox("Select OpenAI Model:", MODEL_NAMES_OPENAI)
+elif provider == "Gemini":
+    selected_model = st.selectbox("Select Gemini Model:", MODEL_NAMES_GEMINI)
 
 allow_web_search=st.checkbox("Allow Web Search")
 
