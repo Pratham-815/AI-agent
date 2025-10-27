@@ -28,14 +28,15 @@ class MultiAgentOrchestrator:
             return ChatGoogleGenerativeAI(model=llm_id, google_api_key=GEMINI_API_KEY)
     
     def research_agent(self, query):
-        """Agent specialized in researching and gathering information"""
-        research_prompt = """You are a Research Specialist. Your job is to:
-        1. Gather comprehensive information about the query
-        2. Use web search when needed to find latest information
-        3. Identify key facts, data, and relevant details
-        4. Present findings in a structured format
+        """Agent specialized in RAW DATA COLLECTION ONLY"""
+        research_prompt = """You are a Data Collector. Your ONLY job is to:
+        1. Find and extract RAW facts, statistics, and information
+        2. List sources and URLs when using web search
+        3. Present data in bullet points WITHOUT any interpretation
+        4. Include dates, numbers, quotes, and concrete details
+        5. DO NOT analyze, summarize, or give opinions - just collect raw data
         
-        Be thorough but concise."""
+        Format: Return ONLY factual data points with sources."""
         
         tools = [TavilySearch(max_results=3)] if self.allow_search else []
         
@@ -53,15 +54,20 @@ class MultiAgentOrchestrator:
         return ai_messages[-1] if ai_messages else "No research data found."
     
     def analyzer_agent(self, research_data, original_query):
-        """Agent specialized in analyzing information"""
-        analysis_prompt = """You are an Analysis Expert. Your job is to:
-        1. Analyze the research data provided
-        2. Identify patterns, insights, and key takeaways
-        3. Connect different pieces of information
-        4. Evaluate credibility and relevance
-        5. Provide critical thinking and deeper understanding
+        """Agent specialized in CRITICAL ANALYSIS ONLY"""
+        analysis_prompt = """You are a Critical Analyst. Your job is to:
+        1. Identify PATTERNS and TRENDS in the raw data
+        2. Compare and CONTRAST different data points
+        3. Find CONTRADICTIONS or gaps in the information
+        4. Evaluate CREDIBILITY and potential biases
+        5. Generate INSIGHTS and deeper meanings
+        6. DO NOT write final answers - only provide analytical observations
         
-        Be analytical and insightful."""
+        Format: Return analysis in structured sections:
+        - Key Patterns:
+        - Important Insights:
+        - Contradictions/Gaps:
+        - Credibility Assessment:"""
         
         agent = create_agent(
             model=self.llm,
@@ -70,11 +76,11 @@ class MultiAgentOrchestrator:
         )
         
         analysis_query = f"""Original Query: {original_query}
-        
-Research Data:
+
+Raw Research Data:
 {research_data}
 
-Please analyze this information and provide key insights."""
+Analyze this data critically. DO NOT answer the question - just analyze the data."""
         
         state = {"messages": [analysis_query]}
         response = agent.invoke(state)
@@ -83,16 +89,17 @@ Please analyze this information and provide key insights."""
         
         return ai_messages[-1] if ai_messages else "No analysis available."
     
-    def writer_agent(self, analysis, original_query):
-        """Agent specialized in writing the final response"""
-        writer_prompt = """You are a Professional Writer. Your job is to:
-        1. Create a clear, well-structured response
-        2. Make the information accessible and engaging
-        3. Organize content logically with proper formatting
-        4. Ensure accuracy while being comprehensive
-        5. Add relevant examples or explanations where needed
+    def writer_agent(self, research_data, analysis, original_query):
+        """Agent specialized in SYNTHESIS and COMMUNICATION"""
+        writer_prompt = """You are a Professional Communicator. Your job is to:
+        1. SYNTHESIZE the research data and analysis into a coherent answer
+        2. Answer the original question DIRECTLY and COMPLETELY
+        3. Use proper formatting (headings, bullet points, bold text)
+        4. Make it engaging and easy to understand
+        5. Include examples and actionable takeaways
+        6. Cite sources when relevant
         
-        Write in a friendly yet professional tone."""
+        Format: Write a complete, well-structured response that actually answers the user's question."""
         
         agent = create_agent(
             model=self.llm,
@@ -100,12 +107,15 @@ Please analyze this information and provide key insights."""
             system_prompt=writer_prompt
         )
         
-        writing_query = f"""Original Query: {original_query}
+        writing_query = f"""Original User Question: {original_query}
 
-Analysis:
+Raw Research Data:
+{research_data}
+
+Critical Analysis:
 {analysis}
 
-Please write a comprehensive, well-formatted final response."""
+Now write a comprehensive answer to the user's question using the research and analysis above."""
         
         state = {"messages": [writing_query]}
         response = agent.invoke(state)
@@ -118,24 +128,52 @@ Please write a comprehensive, well-formatted final response."""
         """Main orchestration method that coordinates all agents"""
         steps = []
         
-        # Step 1: Research
-        steps.append("🔍 **Research Agent** is gathering information...")
+        # Step 1: Research (Raw Data Collection)
+        steps.append({
+            "phase": "research",
+            "status": "in_progress",
+            "message": "🔍 **Research Agent** is collecting raw data and facts..."
+        })
         research_result = self.research_agent(query)
-        steps.append(f"✅ Research completed")
+        steps.append({
+            "phase": "research",
+            "status": "completed",
+            "message": "✅ **Research Agent** collected data from multiple sources"
+        })
         
-        # Step 2: Analysis
-        steps.append("🧠 **Analyzer Agent** is processing the data...")
+        # Step 2: Analysis (Pattern Recognition & Critical Thinking)
+        steps.append({
+            "phase": "analysis",
+            "status": "in_progress",
+            "message": "🧠 **Analyzer Agent** is finding patterns and insights..."
+        })
         analysis_result = self.analyzer_agent(research_result, query)
-        steps.append(f"✅ Analysis completed")
+        steps.append({
+            "phase": "analysis",
+            "status": "completed",
+            "message": "✅ **Analyzer Agent** identified key insights and patterns"
+        })
         
-        # Step 3: Writing
-        steps.append("✍️ **Writer Agent** is crafting the final response...")
-        final_result = self.writer_agent(analysis_result, query)
-        steps.append(f"✅ Response ready!")
+        # Step 3: Writing (Synthesis & Communication)
+        steps.append({
+            "phase": "writing",
+            "status": "in_progress",
+            "message": "✍️ **Writer Agent** is synthesizing the final response..."
+        })
+        final_result = self.writer_agent(research_result, analysis_result, query)
+        steps.append({
+            "phase": "writing",
+            "status": "completed",
+            "message": "✅ **Writer Agent** completed the comprehensive response"
+        })
         
         return {
             "final_response": final_result,
             "research_data": research_result,
             "analysis": analysis_result,
-            "steps": steps
+            "steps": steps,
+            "metadata": {
+                "total_agents": 3,
+                "search_enabled": self.allow_search
+            }
         }
