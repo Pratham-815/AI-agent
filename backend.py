@@ -8,14 +8,15 @@ class RequestModel(BaseModel):
     system_prompt: str
     messages: List[str]
     allow_search: bool
-    use_multi_agent: Optional[bool] = False  # New parameter
+    use_multi_agent: Optional[bool] = False
+    agent_mode: Optional[str] = "sequential"  # "sequential" or "debate"
 
 
 from fastapi import FastAPI
 from ai_agent import get_response_from_ai_agent
 from multi_agent import MultiAgentOrchestrator
 
-ALLOWED_MODEL_NAMES=["llama3-70b-8192", "groq/compound-mini", "llama-3.3-70b-versatile", "gpt-4o-mini", "gemini-1.5-flash", "gemini-2.5-pro"]
+ALLOWED_MODEL_NAMES=["llama3-70b-8192", "groq/compound-mini", "llama-3.3-70b-versatile", "gemini-2.0-flash", "gemini-2.5-pro"]
 
 app = FastAPI(title="AI Agent")
 
@@ -29,16 +30,23 @@ def chat_endpoint(request: RequestModel):
         return {"error": "Model not allowed. Please choose a valid model."}
     
     llm_id = request.model_name
-    query = request.messages[0]  # Get first message
+    query = request.messages[0]
     allow_search = request.allow_search
     system_prompt = request.system_prompt
     provider = request.model_provider
     use_multi_agent = request.use_multi_agent
+    agent_mode = request.agent_mode
 
     # Use multi-agent system if requested
     if use_multi_agent:
         orchestrator = MultiAgentOrchestrator(llm_id, provider, allow_search)
-        result = orchestrator.process_query(query)
+        
+        # Choose between debate mode and sequential mode
+        if agent_mode == "debate":
+            result = orchestrator.debate_mode(query)
+        else:
+            result = orchestrator.process_query(query)
+        
         return result
     else:
         # Use single agent (existing functionality)
