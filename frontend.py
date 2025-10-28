@@ -8,7 +8,7 @@ st.write("Create and Interact with Single or Multi-Agent AI Systems!")
 # Sidebar for configuration
 with st.sidebar:
     st.header("⚙️ Configuration")
-    
+
     # Agent Mode Selection
     agent_mode = st.radio(
         "Select Agent Mode:",
