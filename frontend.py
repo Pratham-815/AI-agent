@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="LangGraph Agent UI", layout="wide")
+st.set_page_config(page_title="AI Agent", layout="wide")
 st.title("🤖 AI Agent System")
 st.write("Create and Interact with Single or Multi-Agent AI Systems!")
 
@@ -52,7 +52,7 @@ with st.sidebar:
     st.divider()
     
     # Provider and Model Selection
-    MODEL_NAMES_GROQ = ["llama-3.3-70b-versatile", "groq/compound-mini"]
+    MODEL_NAMES_GROQ = ["llama-3.3-70b-versatile", "groq/compound-mini", "openai/gpt-oss-120b"]
     MODEL_NAMES_GEMINI = ["gemini-2.0-flash", "gemini-2.5-pro"]
 
     provider = st.radio("Select Provider:", ("Groq", "Gemini"))
@@ -192,19 +192,19 @@ if st.button("🚀 Ask Agent!", type="primary", use_container_width=True):
                             st.divider()
                             
                             # Tabs for each agent output
-                            tab1, tab2, tab3 = st.tabs(["🔍 Research", "🧠 Analysis", "✍️ Final Response"])
+                            tab1, tab2, tab3 = st.tabs(["✍️ Final Response", "🧠 Analysis", "🔍 Research"])
                             
                             with tab1:
-                                st.markdown("### Research Agent Output")
-                                st.markdown(response_data.get("research_data", "No research data"))
-                            
+                                st.markdown("### Writer Agent Output")
+                                st.markdown(response_data.get("final_response", "No response"))
+
                             with tab2:
                                 st.markdown("### Analyzer Agent Output")
                                 st.markdown(response_data.get("analysis", "No analysis"))
                             
                             with tab3:
-                                st.markdown("### Writer Agent Output")
-                                st.markdown(response_data.get("final_response", "No response"))
+                                st.markdown("### Research Agent Output")
+                                st.markdown(response_data.get("research", "No research data"))
                             
                             # Show metadata
                             st.divider()

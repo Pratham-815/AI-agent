@@ -16,7 +16,7 @@ from fastapi import FastAPI
 from ai_agent import get_response_from_ai_agent
 from multi_agent import MultiAgentOrchestrator
 
-ALLOWED_MODEL_NAMES=["llama3-70b-8192", "groq/compound-mini", "llama-3.3-70b-versatile", "gemini-2.0-flash", "gemini-2.5-pro"]
+ALLOWED_MODEL_NAMES=["llama3-70b-8192", "groq/compound-mini", "llama-3.3-70b-versatile", "gemini-2.0-flash", "gemini-2.5-pro", "openai/gpt-oss-120b"]
 
 app = FastAPI(title="AI Agent")
 
