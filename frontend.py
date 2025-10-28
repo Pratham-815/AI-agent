@@ -12,13 +12,13 @@ with st.sidebar:
     # Agent Mode Selection
     agent_mode = st.radio(
         "Select Agent Mode:",
-        ("Single Agent", "Multi-Agent System"),
-        help="Multi-Agent uses specialized agents for research, analysis, and writing"
+        ("Single Agent", "Multi-Agent (Sequential)", "Multi-Agent (Debate)"),
+        help="Choose how agents collaborate"
     )
     
-    if agent_mode == "Multi-Agent System":
+    if agent_mode == "Multi-Agent (Sequential)":
         st.info("""
-        **How Multi-Agent Works:**
+        **Sequential Multi-Agent:**
         
         🔍 **Research Agent**
         - Collects raw data & facts
@@ -35,20 +35,30 @@ with st.sidebar:
         - Creates final answer
         - Proper formatting
         """)
+    elif agent_mode == "Multi-Agent (Debate)":
+        st.success("""
+        **🆕 Debate Mode:**
+        
+        💭 **3 Agents Debate:**
+        - 🌟 Optimist (positive view)
+        - ⚠️ Skeptic (critical view)  
+        - 📊 Neutral (balanced view)
+        
+        ⚖️ **Mediator** synthesizes consensus
+        
+        Perfect for controversial questions!
+        """)
     
     st.divider()
     
     # Provider and Model Selection
     MODEL_NAMES_GROQ = ["llama-3.3-70b-versatile", "groq/compound-mini"]
-    MODEL_NAMES_OPENAI = ["gpt-4o-mini"]
-    MODEL_NAMES_GEMINI = ["gemini-1.5-flash", "gemini-2.5-pro"]
-    
-    provider = st.radio("Select Provider:", ("Groq", "OpenAI", "Gemini"))
+    MODEL_NAMES_GEMINI = ["gemini-2.0-flash", "gemini-2.5-pro"]
+
+    provider = st.radio("Select Provider:", ("Groq", "Gemini"))
     
     if provider == "Groq":
         selected_model = st.selectbox("Select Groq Model:", MODEL_NAMES_GROQ)
-    elif provider == "OpenAI":
-        selected_model = st.selectbox("Select OpenAI Model:", MODEL_NAMES_OPENAI)
     elif provider == "Gemini":
         selected_model = st.selectbox("Select Gemini Model:", MODEL_NAMES_GEMINI)
     
@@ -78,7 +88,7 @@ with col1:
     user_query = st.text_area(
         "Enter your query:", 
         height=200, 
-        placeholder="Try: 'What are the latest AI trends in 2025?' or 'Compare Python vs JavaScript for web development'"
+        placeholder="Try: 'Should I learn Python or JavaScript?' or 'Is AI going to replace programmers?'"
     )
 
 with col2:
@@ -90,13 +100,18 @@ API_URL = "http://127.0.0.1:9999/chat"
 if st.button("🚀 Ask Agent!", type="primary", use_container_width=True):
     if user_query.strip():
         with st.spinner("Processing your query..."):
+            # Determine agent mode for backend
+            use_multi_agent = agent_mode in ["Multi-Agent (Sequential)", "Multi-Agent (Debate)"]
+            backend_mode = "debate" if agent_mode == "Multi-Agent (Debate)" else "sequential"
+            
             payload = {
                 "model_name": selected_model,
                 "model_provider": provider,
                 "system_prompt": system_prompt,
                 "messages": [user_query],
                 "allow_search": allow_web_search,
-                "use_multi_agent": (agent_mode == "Multi-Agent System")
+                "use_multi_agent": use_multi_agent,
+                "agent_mode": backend_mode
             }
             
             response = requests.post(API_URL, json=payload)
@@ -108,62 +123,104 @@ if st.button("🚀 Ask Agent!", type="primary", use_container_width=True):
                     st.error(response_data["error"])
                 else:
                     with response_container:
-                        if agent_mode == "Multi-Agent System":
-                            # Show multi-agent process
-                            st.success("✅ Multi-Agent Processing Complete!")
+                        # DEBATE MODE OUTPUT
+                        if response_data.get("metadata", {}).get("mode") == "debate":
+                            st.success("✅ Multi-Agent Debate Complete!")
                             
-                            # Show workflow with icons
-                            with st.expander("🔄 Agent Workflow Process", expanded=False):
+                            # Show debate process
+                            with st.expander("🗣️ Debate Process", expanded=False):
                                 for step in response_data.get("steps", []):
-                                    if isinstance(step, dict):
-                                        if step.get("status") == "in_progress":
-                                            st.info(step.get("message"))
-                                        else:
-                                            st.success(step.get("message"))
+                                    if step.get("status") == "in_progress":
+                                        st.info(step.get("message"))
                                     else:
-                                        st.write(step)
+                                        st.success(step.get("message"))
                             
                             st.divider()
                             
-                            # Create three distinct sections with clear labeling
-                            st.markdown("### 📊 Agent Outputs Comparison")
+                            # Show individual perspectives in columns
+                            st.markdown("### 💭 Individual Agent Perspectives")
                             
-                            tab1, tab2, tab3 = st.tabs([
-                                "📄 Final Answer (Writer Agent)", 
-                                "🔍 Raw Data (Research Agent)", 
-                                "🧠 Critical Analysis (Analyzer Agent)"
-                            ])
+                            debate_responses = response_data.get("debate_responses", [])
                             
-                            with tab1:
-                                st.markdown("**This is the synthesized, user-friendly answer:**")
-                                st.markdown("---")
-                                st.markdown(response_data.get("final_response", "No response"))
+                            col1, col2, col3 = st.columns(3)
+                            columns = [col1, col2, col3]
                             
-                            with tab2:
-                                st.markdown("**This is raw data collected without interpretation:**")
-                                st.markdown("---")
-                                st.markdown(response_data.get("research_data", "No research data"))
-                                st.caption("ℹ️ Notice: Just facts and data points, no opinions")
+                            for idx, debate_resp in enumerate(debate_responses):
+                                with columns[idx]:
+                                    agent_name = debate_resp.get("agent", "Agent")
+                                    emoji = debate_resp.get("emoji", "🤖")
+                                    
+                                    # Colored headers based on agent type
+                                    if "Optimist" in agent_name:
+                                        st.success(f"{emoji} **{agent_name} Agent**")
+                                    elif "Skeptic" in agent_name:
+                                        st.warning(f"{emoji} **{agent_name} Agent**")
+                                    else:
+                                        st.info(f"{emoji} **{agent_name} Agent**")
+                                    
+                                    with st.container(border=True, height=300):
+                                        st.markdown(debate_resp.get("response", "No response"))
                             
-                            with tab3:
-                                st.markdown("**This is critical analysis of the raw data:**")
-                                st.markdown("---")
-                                st.markdown(response_data.get("analysis", "No analysis"))
-                                st.caption("ℹ️ Notice: Patterns, insights, and critical thinking")
+                            st.divider()
+                            
+                            # Show consensus
+                            st.markdown("### ⚖️ Mediator's Consensus")
+                            with st.container(border=True):
+                                st.markdown(response_data.get("final_response", "No consensus reached"))
                             
                             # Show metadata
-                            if "metadata" in response_data:
-                                st.divider()
-                                col_a, col_b = st.columns(2)
-                                with col_a:
-                                    st.metric("Agents Used", response_data["metadata"].get("total_agents", 3))
-                                with col_b:
-                                    search_status = "✅ Enabled" if response_data["metadata"].get("search_enabled") else "❌ Disabled"
-                                    st.metric("Web Search", search_status)
+                            st.divider()
+                            col_a, col_b = st.columns(2)
+                            with col_a:
+                                st.metric("Agents Participated", response_data["metadata"].get("agents_participated", 4))
+                            with col_b:
+                                search_status = "✅ Enabled" if response_data["metadata"].get("search_enabled") else "❌ Disabled"
+                                st.metric("Web Search", search_status)
+                        
+                        # SEQUENTIAL MULTI-AGENT OUTPUT
+                        elif agent_mode == "Multi-Agent (Sequential)":
+                            st.success("✅ Multi-Agent Processing Complete!")
+                            
+                            # Show workflow steps
+                            with st.expander("🔄 Agent Workflow", expanded=False):
+                                for step in response_data.get("steps", []):
+                                    if step.get("status") == "in_progress":
+                                        st.info(step.get("message"))
+                                    else:
+                                        st.success(step.get("message"))
+                            
+                            st.divider()
+                            
+                            # Tabs for each agent output
+                            tab1, tab2, tab3 = st.tabs(["🔍 Research", "🧠 Analysis", "✍️ Final Response"])
+                            
+                            with tab1:
+                                st.markdown("### Research Agent Output")
+                                st.markdown(response_data.get("research_data", "No research data"))
+                            
+                            with tab2:
+                                st.markdown("### Analyzer Agent Output")
+                                st.markdown(response_data.get("analysis", "No analysis"))
+                            
+                            with tab3:
+                                st.markdown("### Writer Agent Output")
+                                st.markdown(response_data.get("final_response", "No response"))
+                            
+                            # Show metadata
+                            st.divider()
+                            col_a, col_b = st.columns(2)
+                            with col_a:
+                                st.metric("Agents Used", response_data.get("metadata", {}).get("total_agents", 3))
+                            with col_b:
+                                search_status = "✅ Enabled" if response_data.get("metadata", {}).get("search_enabled") else "❌ Disabled"
+                                st.metric("Web Search", search_status)
+                        
+                        # SINGLE AGENT OUTPUT
                         else:
-                            # Show single agent response
-                            st.markdown(response_data.get("final_response", response_data))
+                            st.success("✅ Response Generated!")
+                            st.markdown(response_data.get("final_response", "No response"))
             else:
-                st.error(f"Error: {response.status_code}")
+                with response_container:
+                    st.error(f"❌ Error: {response.status_code} - {response.text}")
     else:
         st.warning("Please enter a query!")

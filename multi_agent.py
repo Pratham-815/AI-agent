@@ -124,11 +124,112 @@ Now write a comprehensive answer to the user's question using the research and a
         
         return ai_messages[-1] if ai_messages else "Unable to generate response."
     
+    def debate_mode(self, query):
+        """Multiple agents debate and reach consensus"""
+        steps = []
+        
+        perspectives = [
+            {
+                "name": "Optimist",
+                "emoji": "🌟",
+                "prompt": "You are an optimistic analyst. Focus on positive aspects, opportunities, success stories, and future potential. Be hopeful but balanced."
+            },
+            {
+                "name": "Skeptic",
+                "emoji": "⚠️",
+                "prompt": "You are a critical skeptic. Focus on risks, downsides, past failures, and limitations. Be cautious but fair."
+            },
+            {
+                "name": "Neutral",
+                "emoji": "📊",
+                "prompt": "You are an objective analyst. Present facts without bias, weigh pros and cons equally, use evidence-based reasoning."
+            }
+        ]
+        
+        debate_responses = []
+        tools = [TavilySearch(max_results=2)] if self.allow_search else []
+        
+        # Each agent gives their perspective
+        for p in perspectives:
+            steps.append({
+                "phase": "debate",
+                "agent": p["name"],
+                "status": "in_progress",
+                "message": f"{p['emoji']} **{p['name']} Agent** is analyzing..."
+            })
+            
+            agent = create_agent(model=self.llm, tools=tools, system_prompt=p["prompt"])
+            state = {"messages": [query]}
+            response = agent.invoke(state)
+            messages = response.get("messages")
+            ai_messages = [msg.content for msg in messages if isinstance(msg, AIMessage)]
+            
+            debate_responses.append({
+                "agent": p["name"],
+                "emoji": p["emoji"],
+                "response": ai_messages[-1] if ai_messages else "No response"
+            })
+            
+            steps.append({
+                "phase": "debate",
+                "agent": p["name"],
+                "status": "completed",
+                "message": f"✅ **{p['name']} Agent** shared perspective"
+            })
+        
+        # Mediator synthesizes consensus
+        steps.append({
+            "phase": "consensus",
+            "status": "in_progress",
+            "message": "⚖️ **Mediator** is building consensus..."
+        })
+        
+        mediator_prompt = """You are a Mediator. Synthesize all perspectives:
+        1. Summarize each viewpoint fairly
+        2. Identify points of AGREEMENT
+        3. Identify points of DISAGREEMENT
+        4. Provide BALANCED CONCLUSION
+        5. Give final recommendation
+        
+        Format with clear sections: Agreement, Disagreement, Conclusion, Recommendation."""
+        
+        mediator = create_agent(model=self.llm, tools=[], system_prompt=mediator_prompt)
+        
+        debate_summary = "\n\n".join([
+            f"**{r['agent']}:**\n{r['response']}" for r in debate_responses
+        ])
+        
+        mediator_query = f"Question: {query}\n\nPerspectives:\n{debate_summary}\n\nSynthesize into consensus."
+        
+        state = {"messages": [mediator_query]}
+        response = mediator.invoke(state)
+        messages = response.get("messages")
+        ai_messages = [msg.content for msg in messages if isinstance(msg, AIMessage)]
+        
+        consensus = ai_messages[-1] if ai_messages else "Unable to reach consensus"
+        
+        steps.append({
+            "phase": "consensus",
+            "status": "completed",
+            "message": "✅ **Mediator** reached conclusion"
+        })
+        
+        return {
+            "final_response": consensus,
+            "debate_responses": debate_responses,
+            "steps": steps,
+            "metadata": {
+                "mode": "debate",
+                "agents_participated": 4,
+                "search_enabled": self.allow_search
+            }
+        }
+    
     def process_query(self, query):
         """Main orchestration method that coordinates all agents"""
         steps = []
         
-        # Step 1: Research (Raw Data Collection)
+        # Step 1: Research
         steps.append({
             "phase": "research",
             "status": "in_progress",
@@ -141,7 +242,7 @@ Now write a comprehensive answer to the user's question using the research and a
             "message": "✅ **Research Agent** collected data from multiple sources"
         })
         
-        # Step 2: Analysis (Pattern Recognition & Critical Thinking)
+        # Step 2: Analysis
         steps.append({
             "phase": "analysis",
             "status": "in_progress",
@@ -154,7 +255,7 @@ Now write a comprehensive answer to the user's question using the research and a
             "message": "✅ **Analyzer Agent** identified key insights and patterns"
         })
         
-        # Step 3: Writing (Synthesis & Communication)
+        # Step 3: Writing
         steps.append({
             "phase": "writing",
             "status": "in_progress",
