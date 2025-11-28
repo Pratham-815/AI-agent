@@ -24,7 +24,6 @@ with col1:
     st.markdown("""
     **Provider:** Groq  
     **Size:** 70 billion parameters  
-    **Speed:** ⚡⚡⚡ Very Fast (2-5 seconds)
     
     ### ✅ Best For:
     - General conversational AI
@@ -62,7 +61,6 @@ with col2:
     st.markdown("""
     **Provider:** Groq  
     **Size:** Smaller, optimized model  
-    **Speed:** ⚡⚡⚡⚡ Ultra Fast (1-2 seconds)
     
     ### ✅ Best For:
     - Simple questions
@@ -106,7 +104,6 @@ with col3:
     st.markdown("""
     **Provider:** Groq (OpenAI-compatible)  
     **Size:** 120 billion parameters  
-    **Speed:** ⚡⚡ Fast (3-6 seconds)
     
     ### ✅ Best For:
     - Advanced reasoning
@@ -157,7 +154,6 @@ with col5:
     st.markdown("""
     **Provider:** Google  
     **Generation:** Latest (2.0)  
-    **Speed:** ⚡⚡ Medium (5-10 seconds)
     
     ### ✅ Best For:
     - Balanced performance
@@ -195,7 +191,6 @@ with col6:
     st.markdown("""
     **Provider:** Google  
     **Generation:** Advanced (2.5)  
-    **Speed:** ⚡ Slower (8-15 seconds)
     
     ### ✅ Best For:
     - Complex reasoning tasks
