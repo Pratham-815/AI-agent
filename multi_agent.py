@@ -38,7 +38,7 @@ class MultiAgentOrchestrator:
         
         Format: Return ONLY factual data points with sources."""
         
-        tools = [TavilySearch(max_results=3)] if self.allow_search else []
+        tools = [TavilySearch(max_results=1)] if self.allow_search else []
         
         agent = create_agent(
             model=self.llm,
@@ -147,7 +147,7 @@ Now write a comprehensive answer to the user's question using the research and a
         ]
         
         debate_responses = []
-        tools = [TavilySearch(max_results=2)] if self.allow_search else []
+        tools = [TavilySearch(max_results=1)] if self.allow_search else []
         
         # Each agent gives their perspective
         for p in perspectives:
