@@ -192,7 +192,7 @@ if st.button("🚀 Ask Agent!", type="primary", use_container_width=True):
                             st.divider()
                             
                             # Tabs for each agent output
-                            tab1, tab2, tab3 = st.tabs(["✍️ Final Response", "🧠 Analysis", "🔍 Research"])
+                            tab1, tab2 = st.tabs(["✍️ Final Response", "🧠 Analysis"])
                             
                             with tab1:
                                 st.markdown("### Writer Agent Output")
@@ -202,9 +202,6 @@ if st.button("🚀 Ask Agent!", type="primary", use_container_width=True):
                                 st.markdown("### Analyzer Agent Output")
                                 st.markdown(response_data.get("analysis", "No analysis"))
                             
-                            with tab3:
-                                st.markdown("### Research Agent Output")
-                                st.markdown(response_data.get("research", "No research data"))
                             
                             # Show metadata
                             st.divider()

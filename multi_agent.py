@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from langchain_groq import ChatGroq
-from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_tavily import TavilySearch
 from langchain.agents import create_agent
@@ -22,8 +21,6 @@ class MultiAgentOrchestrator:
         """Get the appropriate LLM based on provider"""
         if provider == "Groq":
             return ChatGroq(model=llm_id)
-        elif provider == "OpenAI":
-            return ChatOpenAI(model=llm_id)
         elif provider == "Gemini":
             return ChatGoogleGenerativeAI(model=llm_id, google_api_key=GEMINI_API_KEY)
     
