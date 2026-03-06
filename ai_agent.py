@@ -9,7 +9,6 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 
 from langchain_groq import ChatGroq
-from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_tavily import TavilySearch 
 from langchain.agents import create_agent
@@ -21,8 +20,6 @@ system_prompt="Act as an AI chatbot who is smart and friendly"
 def get_response_from_ai_agent(llm_id, query, allow_search, system_prompt, provider):
     if provider=="Groq":
         llm=ChatGroq(model=llm_id)
-    elif provider=="OpenAI":
-        llm=ChatOpenAI(model=llm_id)
     elif provider=="Gemini":
         llm=ChatGoogleGenerativeAI(model=llm_id, google_api_key=GEMINI_API_KEY)
 
